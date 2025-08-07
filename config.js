@@ -59,9 +59,15 @@ const CONFIG = {
         },
         {
             name: "icon工具",
-            description: "记录学习和生活",
+            description: "一个小小的icron搜索工具",
             url: "https://icontool.pages.dev/",
             icon: "https://api.iconify.design/mdi:svg.svg"
+        },
+        {
+            name: "我的日记",
+            description: "一个人孤独的日记",
+            url: "https://icontool.pages.dev/",
+            icon: "https://api.iconify.design/mingcute:diary-fill.svg"
         }
         // 可以添加更多网站
     ],
