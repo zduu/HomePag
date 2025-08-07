@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人主页 - 阿布白</title>
+    <title>个人主页 - zoe.x</title>
     <link rel="stylesheet" href="./static/style.css">
     <link rel="shortcut icon" href="./static/f2.png">
     <link rel="stylesheet" href="./static/fontawesome.css">
+    <!-- 引入配置文件 -->
+    <script src="./config.js"></script>
 </head>
 <body>
     <div class="main-container">
@@ -25,28 +27,25 @@
                 <div class="profile-info">
                     <div class="status">
                         <span class="emoji">😊</span>
-                        <span class="title">Full Stack Developer</span>
+                        <span class="title">加载中...</span>
                     </div>
                     <div class="quote">
                         <span class="emoji">📝</span>
-                        <span>ok <span class="highlight-blue">or</span> I ok <span class="highlight-pink">so</span> ok. </span>
+                        <span>加载中...</span>
                     </div>
-                    
+
                     <div class="social-links">
-                        <a href="https://github.com/IonRh" target="_blank"><i class="fas fa-github"></i></a>
-                        <a href="mailto:likwxos@gmail.com" target="_blank"><i class="fas fa-envelope"></i></a>
-                        <a href="https://t.me/IonMagic" target="_blank"><i class="fas fa-paper-plane"></i></a>
-                        <a href="#" onclick="showIframe()" title="夏日空调"><i class="fas fa-circle"></i></a>
+                        <!-- 社交链接将由配置文件动态生成 -->
                     </div>
-                    
+
                     <div class="location-info">
                         <div class="location">
                             <i class="fa fa-map-marker"></i>
-                            <span>China-AnyWhere</span>
+                            <span>加载中...</span>
                         </div>
                         <div class="name">
                             <i class="fas fa-briefcase"></i>
-                            <span>流浪</span>
+                            <span>加载中...</span>
                         </div>
                     </div>
                 </div>
@@ -54,41 +53,21 @@
             
             <!-- 个人标签 -->
             <section class="tags-section">
-                <div class="tag">网络</div>
-                <div class="tag">计算机</div>
-                <div class="tag">毕业啦</div>
-                <div class="tag">脚本</div>
-                <div class="tag">linux</div>
-                <div class="tag">网络安全</div>
-                <div class="tag">运维</div>
-                <div class="tag">云计算</div>
+                <!-- 标签将由配置文件动态生成 -->
             </section>
                         
             <!-- 技能展示 -->
             <section class="skills-section">
-                <h2><i class="fas fa-heart"></i> 欢迎您</h2>
+                <h2><i class="fas fa-heart"></i> <span id="welcome-title">加载中...</span></h2>
                 <div class="stat-item">
-                    <span class="stat-label">访客IP: </span>
+                    <span class="stat-label" id="visitor-ip-label">加载中...</span>
                     <span class="stat-number blur-effect" id="visitor-ip">获取中...</span>
                 </div>
             </section>
             <br>
             <!-- 时间线 -->
             <section class="timeline-section">
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-title">开始探索新的技术</div>
-                        <div class="timeline-date">2024.2</div>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-title">开始我的互联网生涯</div>
-                        <div class="timeline-date">2021.9</div>
-                    </div>
-                </div>
+                <!-- 时间线将由配置文件动态生成 -->
             </section>
         </aside>
         
@@ -97,17 +76,17 @@
             <!-- GitHub 贡献统计 -->
             <section class="github-stats">
                 <article class="stats-line">
-                    <span class="stats-label">总计贡献：</span>
-                    <span class="stats-text">过去一年共提交了 <span class="highlight-number" id="total-commits">0</span> 次代码</span>
+                    <span class="stats-label" id="total-commits-label">加载中...</span>
+                    <span class="stats-text" id="total-commits-text">加载中... <span class="highlight-number" id="total-commits">0</span> 加载中...</span>
                 </article>
-                
+
                 <article class="stats-line">
-                    <span class="stats-label">最长连续：</span>
-                    <span class="stats-text">连续编程 <span class="highlight-number" id="longest-streak">0</span> 天</span>
+                    <span class="stats-label" id="longest-streak-label">加载中...</span>
+                    <span class="stats-text" id="longest-streak-text">加载中... <span class="highlight-number" id="longest-streak">0</span> 加载中...</span>
                 </article>
-                
+
                 <article class="stats-line">
-                    <span class="stats-label">主要语言：</span>
+                    <span class="stats-label" id="main-language-label">加载中...</span>
                     <span class="stats-text">
                         <span class="language-tag js"></span>
                         <span class="language-tag py"></span>
@@ -116,66 +95,357 @@
                     </span>
                 </article>
             </section>
-            
+
             <!-- 站点展示 -->
             <section class="sites-section">
-                <h2><i class="fas fa-globe"></i> WebSite</h2>
+                <h2><i class="fas fa-globe"></i> <span id="websites-title">加载中...</span></h2>
                 <div class="sites-grid">
-                    <a href="https://blog.loadke.tech/" target="_blank" class="site-link btn-effect">
-                        <div class="site-card">
-                            <div class="site-icon">
-                                <img src="https://img.icons8.com/?id=87160&format=png" alt="博客">
-                            </div>
-                            <div class="site-info">
-                                <h3>博客</h3>
-                                <p>记录技术日常</p>
-                            </div>
-                        </div>
-                    </a>
+                    <!-- 站点将由配置文件动态生成 -->
                 </div>
             </section>
-            
+
             <!-- 项目展示 -->
             <section class="projects-section">
-                <h2><i class="fas fa-code"></i> 项目集</h2>
+                <h2><i class="fas fa-code"></i> <span id="projects-title">加载中...</span></h2>
                 <div class="projects-grid">
-                    <a href="https://github.com/IonRh" target="_blank" class="project-link btn-effect">
-                        <div class="project-card">
-                            <div class="project-icon">
-                                <img src="https://img.icons8.com/fluency/48/github.png" alt="IonRh主页">
-                            </div>
-                            <div class="project-info">
-                                <h3>IonRh主页</h3>
-                                <p>Github介绍页</p>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="https://github.com/IonRh/HomePage" target="_blank" class="project-link btn-effect">
-                        <div class="project-card">
-                            <div class="project-icon">
-                                <img src="https://img.icons8.com/fluency/48/github.png" alt="IonRh主题">
-                            </div>
-                            <div class="project-info">
-                                <h3>本站开源主页</h3>
-                                <p>本站的开源仓库</p>
-                            </div>
-                        </div>
-                    </a>
+                    <!-- 项目将由配置文件动态生成 -->
                 </div>
             </section>
-            
+
             <!-- 技能展示 -->
             <section class="skills-section">
-                <h2><i class="fas fa-code"></i> 技能栈</h2>
+                <h2><i class="fas fa-tools"></i> <span id="skills-title">加载中...</span></h2>
                 <div class="skills-icons">
-                    <div class="skill-icon" title="Python"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python"></div>
-                    <div class="skill-icon" title="Go"><img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/go/go-original.svg" alt="Go"></div>
+                    <!-- 技能将由配置文件动态生成 -->
+                </div>
             </section>
         </main>
     </div>
     <footer>
-            <p>© 2025 WebSite by <a href="https://blog.loadke.tech/" target="_blank">阿布白(IonRh)</a></p>
+            <p id="footer-text">加载中...</p>
     </footer>
 </body>
+<script>
+// 应用配置到页面
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof CONFIG !== 'undefined') {
+        applyConfig();
+    }
+});
+
+function applyConfig() {
+    const { personal, github, social, tags, timeline, websites, projects, skills, texts } = CONFIG;
+
+    // 更新GitHub用户名
+    if (github && github.username) {
+        window.GITHUB_USERNAME = github.username;
+    }
+
+    // 更新页面标题和图标
+    if (personal) {
+        if (personal.name) {
+            document.title = `个人主页 - ${personal.name}`;
+        }
+
+        if (personal.favicon) {
+            const favicon = document.querySelector('link[rel="shortcut icon"]');
+            if (favicon) {
+                favicon.href = personal.favicon;
+            }
+        }
+
+        // 更新头像
+        if (personal.avatar) {
+            const avatar = document.querySelector('.profile-avatar img');
+            if (avatar) {
+                avatar.src = personal.avatar;
+                avatar.alt = personal.name || '头像';
+            }
+        }
+
+        // 更新职位标题
+        if (personal.title) {
+            const titleElement = document.querySelector('.status .title');
+            if (titleElement) {
+                titleElement.textContent = personal.title;
+            }
+        }
+
+        // 更新个人格言
+        if (personal.quote) {
+            const quoteElement = document.querySelector('.quote span:last-child');
+            if (quoteElement) {
+                // 保持原有的高亮样式，只替换文本内容
+                const highlightBlue = '<span class="highlight-blue">or</span>';
+                const highlightPink = '<span class="highlight-pink">so</span>';
+                quoteElement.innerHTML = personal.quote.replace('or', highlightBlue).replace('so', highlightPink);
+            }
+        }
+
+        // 更新地理位置
+        if (personal.location) {
+            const locationElement = document.querySelector('.location span');
+            if (locationElement) {
+                locationElement.textContent = personal.location;
+            }
+        }
+
+        // 更新状态
+        if (personal.status) {
+            const statusElement = document.querySelector('.name span');
+            if (statusElement) {
+                statusElement.textContent = personal.status;
+            }
+        }
+    }
+
+    // 更新社交链接
+    if (social) {
+        updateSocialLinks(social);
+    }
+
+    // 更新标签
+    if (tags) {
+        updateTags(tags);
+    }
+
+    // 更新时间线
+    if (timeline) {
+        updateTimeline(timeline);
+    }
+
+    // 更新站点展示
+    if (websites) {
+        updateWebsites(websites);
+    }
+
+    // 更新项目展示
+    if (projects) {
+        updateProjects(projects);
+    }
+
+    // 更新技能展示
+    if (skills) {
+        updateSkills(skills);
+    }
+
+    // 更新页面文本
+    if (texts) {
+        updateTexts(texts);
+    }
+}
+
+function updateSocialLinks(social) {
+    const socialContainer = document.querySelector('.social-links');
+    if (!socialContainer) return;
+
+    // 清空现有链接
+    socialContainer.innerHTML = '';
+
+    // 社交平台图标映射
+    const iconMap = {
+        github: 'fas fa-github',
+        email: 'fas fa-envelope',
+        telegram: 'fas fa-paper-plane',
+        twitter: 'fab fa-twitter',
+        linkedin: 'fab fa-linkedin',
+        blog: 'fas fa-blog'
+    };
+
+    // 添加配置的社交链接
+    Object.entries(social).forEach(([platform, url]) => {
+        if (url) {
+            const link = document.createElement('a');
+            link.href = platform === 'email' ? `mailto:${url}` : url;
+            link.target = '_blank';
+            link.innerHTML = `<i class="${iconMap[platform] || 'fas fa-link'}"></i>`;
+            socialContainer.appendChild(link);
+        }
+    });
+
+    // 保留原有的特殊链接（夏日空调）
+    const specialLink = document.createElement('a');
+    specialLink.href = '#';
+    specialLink.onclick = () => showIframe();
+    specialLink.title = '夏日空调';
+    specialLink.innerHTML = '<i class="fas fa-circle"></i>';
+    socialContainer.appendChild(specialLink);
+}
+
+function updateTags(tags) {
+    const tagsContainer = document.querySelector('.tags-section');
+    if (!tagsContainer) return;
+
+    // 清空现有标签
+    tagsContainer.innerHTML = '';
+
+    // 添加配置的标签
+    tags.forEach(tag => {
+        const tagElement = document.createElement('div');
+        tagElement.className = 'tag';
+        tagElement.textContent = tag;
+        tagsContainer.appendChild(tagElement);
+    });
+}
+
+function updateTimeline(timeline) {
+    const timelineContainer = document.querySelector('.timeline-section');
+    if (!timelineContainer) return;
+
+    // 清空现有时间线
+    timelineContainer.innerHTML = '';
+
+    // 添加配置的时间线事件
+    timeline.forEach(event => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+
+        timelineItem.innerHTML = `
+            <div class="timeline-dot"></div>
+            <div class="timeline-content">
+                <div class="timeline-title">${event.title}</div>
+                <div class="timeline-date">${event.date}</div>
+            </div>
+        `;
+
+        timelineContainer.appendChild(timelineItem);
+    });
+}
+
+function updateWebsites(websites) {
+    const websitesGrid = document.querySelector('.sites-grid');
+    if (!websitesGrid) return;
+
+    // 清空现有网站
+    websitesGrid.innerHTML = '';
+
+    // 添加配置的网站
+    websites.forEach(site => {
+        const siteLink = document.createElement('a');
+        siteLink.href = site.url;
+        siteLink.target = '_blank';
+        siteLink.className = 'site-link btn-effect';
+
+        siteLink.innerHTML = `
+            <div class="site-card">
+                <div class="site-icon">
+                    <img src="${site.icon}" alt="${site.name}">
+                </div>
+                <div class="site-info">
+                    <h3>${site.name}</h3>
+                    <p>${site.description}</p>
+                </div>
+            </div>
+        `;
+
+        websitesGrid.appendChild(siteLink);
+    });
+}
+
+function updateProjects(projects) {
+    const projectsGrid = document.querySelector('.projects-grid');
+    if (!projectsGrid) return;
+
+    // 清空现有项目
+    projectsGrid.innerHTML = '';
+
+    // 添加配置的项目
+    projects.forEach(project => {
+        const projectLink = document.createElement('a');
+        projectLink.href = project.url;
+        projectLink.target = '_blank';
+        projectLink.className = 'project-link btn-effect';
+
+        projectLink.innerHTML = `
+            <div class="project-card">
+                <div class="project-icon">
+                    <img src="${project.icon}" alt="${project.name}">
+                </div>
+                <div class="project-info">
+                    <h3>${project.name}</h3>
+                    <p>${project.description}</p>
+                </div>
+            </div>
+        `;
+
+        projectsGrid.appendChild(projectLink);
+    });
+}
+
+function updateSkills(skills) {
+    const skillsContainer = document.querySelector('.skills-icons');
+    if (!skillsContainer) return;
+
+    // 清空现有技能
+    skillsContainer.innerHTML = '';
+
+    // 添加配置的技能
+    skills.forEach(skill => {
+        const skillIcon = document.createElement('div');
+        skillIcon.className = 'skill-icon';
+        skillIcon.title = skill.name;
+        skillIcon.innerHTML = `<img src="${skill.icon}" alt="${skill.name}">`;
+        skillsContainer.appendChild(skillIcon);
+    });
+}
+
+function updateTexts(texts) {
+    // 更新GitHub统计区域文本
+    if (texts.githubStats) {
+        const { githubStats } = texts;
+
+        // 总提交数
+        const totalCommitsLabel = document.getElementById('total-commits-label');
+        if (totalCommitsLabel) totalCommitsLabel.textContent = githubStats.totalCommitsLabel;
+
+        const totalCommitsText = document.getElementById('total-commits-text');
+        if (totalCommitsText) {
+            totalCommitsText.innerHTML = `${githubStats.totalCommitsText} <span class="highlight-number" id="total-commits">0</span> ${githubStats.totalCommitsUnit}`;
+        }
+
+        // 最长连续
+        const longestStreakLabel = document.getElementById('longest-streak-label');
+        if (longestStreakLabel) longestStreakLabel.textContent = githubStats.longestStreakLabel;
+
+        const longestStreakText = document.getElementById('longest-streak-text');
+        if (longestStreakText) {
+            longestStreakText.innerHTML = `${githubStats.longestStreakText} <span class="highlight-number" id="longest-streak">0</span> ${githubStats.longestStreakUnit}`;
+        }
+
+        // 主要语言
+        const mainLanguageLabel = document.getElementById('main-language-label');
+        if (mainLanguageLabel) mainLanguageLabel.textContent = githubStats.mainLanguageLabel;
+    }
+
+    // 更新区域标题
+    if (texts.sectionTitles) {
+        const { sectionTitles } = texts;
+
+        const welcomeTitle = document.getElementById('welcome-title');
+        if (welcomeTitle) welcomeTitle.textContent = sectionTitles.welcome;
+
+        const visitorIPLabel = document.getElementById('visitor-ip-label');
+        if (visitorIPLabel) visitorIPLabel.textContent = sectionTitles.visitorIP;
+
+        const websitesTitle = document.getElementById('websites-title');
+        if (websitesTitle) websitesTitle.textContent = sectionTitles.websites;
+
+        const projectsTitle = document.getElementById('projects-title');
+        if (projectsTitle) projectsTitle.textContent = sectionTitles.projects;
+
+        const skillsTitle = document.getElementById('skills-title');
+        if (skillsTitle) skillsTitle.textContent = sectionTitles.skills;
+    }
+
+    // 更新页脚
+    if (texts.footer) {
+        const { footer } = texts;
+        const footerText = document.getElementById('footer-text');
+        if (footerText) {
+            footerText.innerHTML = `© ${footer.year} ${footer.text} <a href="${footer.authorUrl}" target="_blank">${footer.author}</a>`;
+        }
+    }
+}
+</script>
 <script src="./static/script.js"></script>
 </html>

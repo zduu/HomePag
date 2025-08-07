@@ -1,5 +1,7 @@
-// GitHub用户名配置 - 修改为您的GitHub用户名
-const GITHUB_USERNAME = 'zduu'; // 请修改为您的GitHub用户名
+// GitHub用户名配置 - 从配置文件或全局变量获取
+const GITHUB_USERNAME = window.GITHUB_USERNAME ||
+    (typeof CONFIG !== 'undefined' && CONFIG.github && CONFIG.github.username) ||
+    'zduu'; // 默认用户名，建议在 config.js 中修改
 
 // 获取真实的GitHub统计数据
 async function fetchGitHubContributions(username) {
@@ -101,8 +103,8 @@ function calculateCommitStats(events) {
     longestStreak = Math.max(longestStreak, currentStreak);
     
     return {
-        totalCommits: Math.max(totalCommits * 12, 500), // 估算年度提交数
-        longestStreak: Math.max(longestStreak, 15) // 至少显示15天
+        totalCommits: totalCommits * 12, // 估算年度提交数
+        longestStreak: longestStreak // 真实连续天数
     };
 }
 
