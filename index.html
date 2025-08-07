@@ -114,7 +114,7 @@
 
             <!-- 技能展示 -->
             <section class="skills-section">
-                <h2><i class="fas fa-tools"></i> <span id="skills-title">加载中...</span></h2>
+                <h2><img src="https://img.icons8.com/fluency/24/maintenance.png" alt="🛠️" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;"> <span id="skills-title">加载中...</span></h2>
                 <div class="skills-icons">
                     <!-- 技能将由配置文件动态生成 -->
                 </div>
@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function applyConfig() {
+    console.log('开始应用配置:', CONFIG);
     const { personal, github, social, tags, timeline, websites, projects, skills, texts } = CONFIG;
 
     // 更新GitHub用户名
@@ -237,7 +238,12 @@ function applyConfig() {
 
 function updateSocialLinks(social) {
     const socialContainer = document.querySelector('.social-links');
-    if (!socialContainer) return;
+    if (!socialContainer) {
+        console.error('社交链接容器未找到');
+        return;
+    }
+
+    console.log('更新社交链接:', social);
 
     // 清空现有链接
     socialContainer.innerHTML = '';
@@ -259,7 +265,19 @@ function updateSocialLinks(social) {
             link.href = platform === 'email' ? `mailto:${url}` : url;
             link.target = '_blank';
             link.innerHTML = `<i class="${iconMap[platform] || 'fas fa-link'}"></i>`;
+
+            // 添加点击事件监听器确保跳转
+            link.addEventListener('click', function(e) {
+                console.log(`点击了 ${platform} 链接:`, url);
+                if (platform === 'email') {
+                    window.location.href = `mailto:${url}`;
+                } else {
+                    window.open(url, '_blank');
+                }
+            });
+
             socialContainer.appendChild(link);
+            console.log(`添加了 ${platform} 链接:`, url);
         }
     });
 
@@ -270,6 +288,8 @@ function updateSocialLinks(social) {
     specialLink.title = '夏日空调';
     specialLink.innerHTML = '<i class="fas fa-circle"></i>';
     socialContainer.appendChild(specialLink);
+
+    console.log('社交链接更新完成，共添加了', socialContainer.children.length, '个链接');
 }
 
 function updateTags(tags) {

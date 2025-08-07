@@ -7,7 +7,7 @@ import http.server
 import socketserver
 import webbrowser
 
-PORT = 8000
+PORT = 8001
 
 print(f"🚀 启动本地服务器，端口: {PORT}")
 print(f"📍 访问地址: http://localhost:{PORT}")
