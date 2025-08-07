@@ -87,11 +87,11 @@ const CONFIG = {
     skills: [
         {
             name: "3D打印",
-            icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/blender/blender-original.svg"
+            icon: "https://api.iconify.design/cbi:3dprinter-printing.svg"
         },
         {
             name: "机械设计",
-            icon: "https://img.icons8.com/fluency/48/engineering.png"
+            icon: "https://img.icons8.com/color/48/solidworks.png"
         }
         // 可以添加更多技能
     ],
