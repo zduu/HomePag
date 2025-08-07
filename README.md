@@ -6,7 +6,7 @@
 [![Website](https://img.shields.io/website?style=flat-square&url=https%3A//zoeoe.de)](https://zoeoe.de)
 
 ## 🌐 在线演示
-**我的站点：** [https://zoeoe.de](https://zoeoe.de)
+**我的站点：** [https://edxx.de](https://edxx.de)
 **原作者演示：** [http://home.loadke.tech/](http://home.loadke.tech/)
 
 ## 👨‍💻 项目信息

@@ -56,6 +56,12 @@ const CONFIG = {
             description: "记录学习和生活",
             url: "https://zoeoe.de",
             icon: "https://img.icons8.com/fluency/48/blog.png"
+        },
+        {
+            name: "icon工具",
+            description: "记录学习和生活",
+            url: "https://icontool.pages.dev/",
+            icon: "https://api.iconify.design/mdi:svg.svg"
         }
         // 可以添加更多网站
     ],
