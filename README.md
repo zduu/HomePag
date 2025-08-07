@@ -1,5 +1,6 @@
-# 🏠 阿布白（IonRh）的主页
-
+# 🏠 Zoe.X（zduu）的主页
+## 原作者：阿布白（IonRh）
+## [原项目地址](https://github.com/IonRh/HomePage)
 ## 🌐 在线演示
 **演示站点：** http://home.loadke.tech/
 

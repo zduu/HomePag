@@ -1,5 +1,5 @@
 // GitHub用户名配置 - 修改为您的GitHub用户名
-const GITHUB_USERNAME = 'IonRh'; // 请修改为您的GitHub用户名
+const GITHUB_USERNAME = 'zduu'; // 请修改为您的GitHub用户名
 
 // 获取真实的GitHub统计数据
 async function fetchGitHubContributions(username) {
