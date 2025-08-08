@@ -76,6 +76,30 @@ const CONFIG = {
             description: "一个人孤独的日记",
             url: "https://diary.edxx.de",
             icon: "https://api.iconify.design/mingcute:diary-fill.svg"
+        },
+        {
+            name: "gpt-load",
+            description: "gpt-load的备份站点",
+            url: "https://idxx.alwaysdata.net",
+            icon: "https://api.iconify.design/tabler:brand-openai.svg"
+        },
+        {
+            name: "img-bed",
+            description: "我的图床",
+            url: "https://image.zhou12203.top",
+            icon: "https://api.iconify.design/feather:image.svg"
+        },
+        {
+            name: "mail-temp",
+            description: "我的域名邮箱",
+            url: "https://mail.edxx.de",
+            icon: "https://api.iconify.design/lucide:mailbox.svg"
+        },                
+        {
+            name: "BPB",
+            description: "我的BPB面板",
+            url: "https://bepushbusy.pages.dev",
+            icon: "https://api.iconify.design/lucide:panel-top.svg"
         }
         // 可以添加更多网站
     ],
