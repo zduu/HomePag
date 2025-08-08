@@ -79,7 +79,7 @@ const CONFIG = {
         },
         {
             name: "gpt-load",
-            description: "gpt-load的备份站点",
+            description: "gpt-load的备份",
             url: "https://idxx.alwaysdata.net",
             icon: "https://api.iconify.design/tabler:brand-openai.svg"
         },
