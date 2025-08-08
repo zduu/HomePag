@@ -407,11 +407,14 @@ body::before {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: var(--border-primary) transparent;
+    padding-bottom: 10px; /* 与底部滚动条保持间距 */
 }
 
 /* 自定义滚动条样式 */
 .contrib-scroll-container::-webkit-scrollbar {
     height: 6px;
+    background: transparent; /* 避免贴太近 */
+    margin-top: 2px;
 }
 
 .contrib-scroll-container::-webkit-scrollbar-track {
@@ -513,7 +516,7 @@ body::before {
 .contrib-day:hover { transform: scale(1.1); }
 
 /* 图例 */
-.contrib-legend { display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-top: 6px; color: var(--text-muted); font-size: 10px; }
+.contrib-legend { display: flex; align-items: center; gap: 6px; justify-content: flex-end; margin-top: 10px; color: var(--text-muted); font-size: 10px; }
 .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
 
 /* 颜色等级，尽量贴近 GitHub 绿色系 */
