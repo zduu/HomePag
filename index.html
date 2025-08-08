@@ -11,6 +11,13 @@
     <script src="./config.js"></script>
 </head>
 <body>
+    <!-- 主题切换按钮 -->
+    <div class="theme-toggle-container">
+        <button class="theme-toggle" id="theme-toggle" title="切换主题">
+            <i class="fas fa-sun" id="theme-icon"></i>
+        </button>
+    </div>
+
     <div class="main-container">
         <!-- 左侧个人信息 -->
         <aside class="sidebar">
@@ -75,25 +82,49 @@
         <main class="content-area">
             <!-- GitHub 贡献统计 -->
             <section class="github-stats">
-                <article class="stats-line">
-                    <span class="stats-label" id="total-commits-label">加载中...</span>
-                    <span class="stats-text" id="total-commits-text">加载中... <span class="highlight-number" id="total-commits">0</span> 加载中...</span>
-                </article>
+                <div class="stats-toggle">
+                    <button id="view-stats" class="stats-toggle-btn active">统计</button>
+                    <button id="view-calendar" class="stats-toggle-btn">日历</button>
+                </div>
 
-                <article class="stats-line">
-                    <span class="stats-label" id="longest-streak-label">加载中...</span>
-                    <span class="stats-text" id="longest-streak-text">加载中... <span class="highlight-number" id="longest-streak">0</span> 加载中...</span>
-                </article>
+                <div class="stats-lines">
+                    <article class="stats-line">
+                        <span class="stats-label" id="total-commits-label">加载中...</span>
+                        <span class="stats-text" id="total-commits-text">加载中... <span class="highlight-number" id="total-commits">0</span> 加载中...</span>
+                    </article>
 
-                <article class="stats-line">
-                    <span class="stats-label" id="main-language-label">加载中...</span>
-                    <span class="stats-text">
-                        <span class="language-tag js"></span>
-                        <span class="language-tag py"></span>
-                        <span class="language-tag ts"></span>
-                        <span class="language-tag css"></span>
-                    </span>
-                </article>
+                    <article class="stats-line">
+                        <span class="stats-label" id="longest-streak-label">加载中...</span>
+                        <span class="stats-text" id="longest-streak-text">加载中... <span class="highlight-number" id="longest-streak">0</span> 加载中...</span>
+                    </article>
+
+                    <article class="stats-line">
+                        <span class="stats-label" id="main-language-label">加载中...</span>
+                        <span class="stats-text">
+                            <span class="language-tag js"></span>
+                            <span class="language-tag py"></span>
+                            <span class="language-tag ts"></span>
+                            <span class="language-tag css"></span>
+                        </span>
+                    </article>
+                </div>
+
+                <div class="contrib-calendar" id="contrib-calendar" style="display:none">
+                    <div class="contrib-months" id="contrib-months"></div>
+                    <div class="contrib-grid-wrap">
+                        <div class="contrib-weekdays">
+                            <span></span>
+                            <span>周一</span>
+                            <span></span>
+                            <span>周三</span>
+                            <span></span>
+                            <span>周五</span>
+                            <span></span>
+                        </div>
+                        <div class="contrib-grid" id="contrib-grid"></div>
+                    </div>
+                    <div class="contrib-legend" id="contrib-legend"></div>
+                </div>
             </section>
 
             <!-- 站点展示 -->
@@ -252,6 +283,7 @@ function updateSocialLinks(social) {
     const iconMap = {
         github: 'fas fa-github',
         email: 'fas fa-envelope',
+        wechat: 'fas fa-qrcode',
         telegram: 'fas fa-paper-plane',
         twitter: 'fab fa-twitter',
         linkedin: 'fab fa-linkedin',
@@ -260,13 +292,34 @@ function updateSocialLinks(social) {
 
     // 添加配置的社交链接
     Object.entries(social).forEach(([platform, url]) => {
-        if (url) {
-            const link = document.createElement('a');
+        if (!url) return;
+
+        const link = document.createElement('a');
+        link.innerHTML = `<i class="${iconMap[platform] || 'fas fa-link'}"></i>`;
+
+        // 邮箱/微信 采用一键复制
+        if (platform === 'email' || platform === 'wechat') {
+            link.href = 'javascript:void(0)';
+            link.title = platform === 'email' ? '复制邮箱' : '复制微信';
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showToast(platform === 'email' ? '邮箱已复制' : '微信号已复制');
+                } catch (err) {
+                    console.warn('Clipboard API 不可用，尝试降级方案');
+                    const ta = document.createElement('textarea');
+                    ta.value = url;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); showToast(platform === 'email' ? '邮箱已复制' : '微信号已复制'); } catch (e) { alert(url); }
+                    document.body.removeChild(ta);
+                }
+            });
+        } else {
+            // 其他平台正常跳转
             link.href = platform === 'email' ? `mailto:${url}` : url;
             link.target = '_blank';
-            link.innerHTML = `<i class="${iconMap[platform] || 'fas fa-link'}"></i>`;
-
-            // 添加点击事件监听器确保跳转
             link.addEventListener('click', function(e) {
                 console.log(`点击了 ${platform} 链接:`, url);
                 if (platform === 'email') {
@@ -275,11 +328,32 @@ function updateSocialLinks(social) {
                     window.open(url, '_blank');
                 }
             });
-
-            socialContainer.appendChild(link);
-            console.log(`添加了 ${platform} 链接:`, url);
         }
+
+        socialContainer.appendChild(link);
+        console.log(`添加了 ${platform} 链接:`, url);
     });
+
+    // 创建 Toast 容器（若不存在）
+    if (!document.querySelector('.toast-container')) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-container';
+        document.body.appendChild(toast);
+    }
+
+    function showToast(message) {
+        const container = document.querySelector('.toast-container');
+        if (!container) return;
+        const item = document.createElement('div');
+        item.className = 'toast-item';
+        item.textContent = message;
+        container.appendChild(item);
+        requestAnimationFrame(() => item.classList.add('show'));
+        setTimeout(() => {
+            item.classList.remove('show');
+            setTimeout(() => item.remove(), 300);
+        }, 1500);
+    }
 
     // 保留原有的特殊链接（夏日空调）
     const specialLink = document.createElement('a');

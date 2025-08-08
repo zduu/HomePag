@@ -1,3 +1,107 @@
+// ==================== 主题切换功能 ====================
+
+// 主题管理类
+class ThemeManager {
+    constructor() {
+        this.currentTheme = this.getStoredTheme() || this.getSystemTheme();
+        this.themeToggle = null;
+        this.themeIcon = null;
+        this.init();
+    }
+
+    // 获取存储的主题
+    getStoredTheme() {
+        return localStorage.getItem('theme');
+    }
+
+    // 获取系统主题
+    getSystemTheme() {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    // 存储主题
+    setStoredTheme(theme) {
+        localStorage.setItem('theme', theme);
+    }
+
+    // 应用主题
+    applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        this.currentTheme = theme;
+        this.updateThemeIcon(theme);
+        this.setStoredTheme(theme);
+
+        // 添加过渡效果类
+        document.body.classList.add('theme-transition');
+
+        // 移除过渡效果类（避免影响其他动画）
+        setTimeout(() => {
+            document.body.classList.remove('theme-transition');
+        }, 300);
+    }
+
+    // 更新主题图标
+    updateThemeIcon(theme) {
+        if (this.themeIcon) {
+            if (theme === 'dark') {
+                this.themeIcon.className = 'fas fa-moon';
+                this.themeToggle.title = '切换到亮色模式';
+            } else {
+                this.themeIcon.className = 'fas fa-sun';
+                this.themeToggle.title = '切换到暗色模式';
+            }
+        }
+    }
+
+    // 切换主题
+    toggleTheme() {
+        // 添加切换动画类
+        if (this.themeToggle) {
+            this.themeToggle.classList.add('switching');
+            setTimeout(() => {
+                this.themeToggle.classList.remove('switching');
+            }, 300);
+        }
+
+        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+    }
+
+    // 初始化
+    init() {
+        // 等待DOM加载完成
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupThemeToggle());
+        } else {
+            this.setupThemeToggle();
+        }
+
+        // 应用初始主题
+        this.applyTheme(this.currentTheme);
+
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!this.getStoredTheme()) {
+                this.applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+
+    // 设置主题切换按钮
+    setupThemeToggle() {
+        this.themeToggle = document.getElementById('theme-toggle');
+        this.themeIcon = document.getElementById('theme-icon');
+
+        if (this.themeToggle) {
+            this.themeToggle.addEventListener('click', () => this.toggleTheme());
+            this.updateThemeIcon(this.currentTheme);
+        }
+    }
+}
+
+// 创建主题管理器实例
+const themeManager = new ThemeManager();
+
 // GitHub用户名配置 - 从配置文件或全局变量获取
 const GITHUB_USERNAME = window.GITHUB_USERNAME ||
     (typeof CONFIG !== 'undefined' && CONFIG.github && CONFIG.github.username) ||
@@ -10,29 +114,61 @@ async function fetchGitHubContributions(username) {
         const userResponse = await fetch(`https://api.github.com/users/${username}`);
         if (!userResponse.ok) throw new Error('用户API请求失败');
         const userData = await userResponse.json();
-        
+
         // 获取用户仓库
         const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`);
         if (!reposResponse.ok) throw new Error('仓库API请求失败');
         const repos = await reposResponse.json();
-        
+
         // 获取最近的提交活动
         const eventsResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=100`);
         const events = eventsResponse.ok ? await eventsResponse.json() : [];
-        
+
         // 使用GitHub用户数据进行统计
         const githubStats = calculateGitHubStats(userData, repos, events);
-        
+
         // 计算提交统计
         const commitStats = calculateCommitStats(events);
-        
+
         // 更新显示
         updateGitHubDisplay({
             totalCommits: commitStats.totalCommits,
             longestStreak: commitStats.longestStreak,
             languages: githubStats.languages
         });
-        
+
+        // 渲染贡献日历：按配置选择数据源
+        const source = (CONFIG && CONFIG.github && CONFIG.github.calendarSource) || 'auto';
+        let calendarData = null;
+        if (source === 'proxy' || source === 'auto') {
+            try {
+                calendarData = await fetchCalendarViaProxy(username);
+            } catch (e) {
+                if (source === 'proxy') throw e;
+                console.warn('proxy 获取失败，回退到 events 估算');
+            }
+        }
+        if (!calendarData) {
+            calendarData = buildDailyContribMap(events);
+        }
+        renderContribCalendar(calendarData);
+
+// 通过后端代理获取精确贡献日历（GraphQL）
+async function fetchCalendarViaProxy(login) {
+    const cfg = (typeof CONFIG !== 'undefined' && CONFIG.github) || {};
+    const endpoint = cfg.calendarProxyEndpoint || '/api/github/contributions';
+    const to = new Date(); to.setHours(0,0,0,0);
+    const from = new Date(to); from.setDate(from.getDate() - 365);
+    const iso = d => new Date(d).toISOString();
+    const url = `${endpoint}?login=${encodeURIComponent(login)}&from=${encodeURIComponent(iso(from))}&to=${encodeURIComponent(iso(to))}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('proxy failed');
+    const data = await r.json(); // { days:[{date,count}], total, colors }
+    const map = new Map(data.days.map(d => [d.date, d.count]));
+    return { map, start: from, end: to };
+}
+
+
     } catch (error) {
         console.error('获取GitHub数据失败:', error);
         // 保持默认的模拟数据
@@ -46,7 +182,7 @@ function calculateGitHubStats(userData, repos, events) {
     const publicRepos = userData.public_repos || 0;
     const totalStars = repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0);
     const totalForks = repos.reduce((sum, repo) => sum + (repo.forks_count || 0), 0);
-    
+
     // 根据实际数据生成语言分布统计
     const customLanguageStats = [
         { lang: 'JavaScript', percent: Math.min(35, Math.max(20, publicRepos * 2)) },
@@ -54,13 +190,13 @@ function calculateGitHubStats(userData, repos, events) {
         { lang: 'TypeScript', percent: Math.min(20, Math.max(10, totalForks * 4)) },
         { lang: 'CSS', percent: Math.min(15, Math.max(5, events.length / 2)) }
     ];
-    
+
     // 确保百分比总和为100
     const total = customLanguageStats.reduce((sum, item) => sum + item.percent, 0);
     customLanguageStats.forEach(item => {
         item.percent = Math.round((item.percent / total) * 100);
     });
-    
+
     return {
         languages: customLanguageStats,
         publicRepos,
@@ -73,25 +209,25 @@ function calculateGitHubStats(userData, repos, events) {
 function calculateCommitStats(events) {
     // 过滤push事件
     const pushEvents = events.filter(event => event.type === 'PushEvent');
-    
+
     // 计算总提交数（近期活动）
     const totalCommits = pushEvents.reduce((total, event) => {
         return total + (event.payload.commits ? event.payload.commits.length : 0);
     }, 0);
-    
+
     // 计算连续天数（简单估算）
     const dates = pushEvents.map(event => new Date(event.created_at).toDateString());
     const uniqueDates = [...new Set(dates)];
-    
+
     // 简单的连续天数计算
     let longestStreak = 0;
     let currentStreak = 0;
-    
+
     for (let i = 0; i < uniqueDates.length - 1; i++) {
         const date1 = new Date(uniqueDates[i]);
         const date2 = new Date(uniqueDates[i + 1]);
         const diffDays = Math.abs((date1 - date2) / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays <= 1) {
             currentStreak++;
         } else {
@@ -99,9 +235,9 @@ function calculateCommitStats(events) {
             currentStreak = 0;
         }
     }
-    
+
     longestStreak = Math.max(longestStreak, currentStreak);
-    
+
     return {
         totalCommits: totalCommits * 12, // 估算年度提交数
         longestStreak: longestStreak // 真实连续天数
@@ -115,13 +251,13 @@ function updateGitHubDisplay(data) {
     if (totalCommitsElement) {
         animateNumber(totalCommitsElement, parseInt(totalCommitsElement.textContent.replace(/,/g, '')), data.totalCommits, 2000);
     }
-    
+
     // 更新最长连续
     const longestStreakElement = document.getElementById('longest-streak');
     if (longestStreakElement) {
         animateNumber(longestStreakElement, parseInt(longestStreakElement.textContent), data.longestStreak, 1500);
     }
-    
+
     // 更新语言统计
     if (data.languages && data.languages.length > 0) {
         const languageContainer = document.querySelector('.language-tag').parentElement;
@@ -129,10 +265,137 @@ function updateGitHubDisplay(data) {
             const className = getLanguageClass(lang);
             return `<span class="language-tag ${className}">${lang} (${percent}%)</span>`;
         }).join('');
-        
+
         languageContainer.innerHTML = languageHTML;
     }
 }
+
+// ---------- 贡献日历：数据聚合 ----------
+function buildDailyContribMap(events) {
+    // 统计最近 53 周（约一年）
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(start.getDate() - 7 * 53);
+
+    const map = new Map(); // key: YYYY-MM-DD, value: count
+    for (const ev of events) {
+        if (ev.type !== 'PushEvent') continue;
+        const d = new Date(ev.created_at);
+        if (d < start) continue;
+        const key = d.toISOString().slice(0, 10);
+        const count = (ev.payload && ev.payload.commits) ? ev.payload.commits.length : 1;
+        map.set(key, (map.get(key) || 0) + count);
+    }
+    return { map, start, end: today };
+}
+
+
+// ---------- GitHub 风格日历渲染（带月份/星期/图例） ----------
+function renderContribCalendar(contrib) {
+    const monthsEl = document.getElementById('contrib-months');
+    const gridEl = document.getElementById('contrib-grid');
+    const legendEl = document.getElementById('contrib-legend');
+    const container = document.getElementById('contrib-calendar');
+    if (!(monthsEl && gridEl && legendEl && container)) return;
+
+    monthsEl.innerHTML = '';
+    gridEl.innerHTML = '';
+    legendEl.innerHTML = '';
+
+    const { map } = contrib;
+
+    // 以“周日”为列起点，计算 53 列 x 7 行的范围：end 对齐到最近的周六
+    const end = new Date(); end.setHours(0,0,0,0);
+    const endWeekday = end.getDay(); // 0=Sun ... 6=Sat
+    const alignedEnd = new Date(end);
+    alignedEnd.setDate(end.getDate() + (6 - endWeekday)); // 下一个周六
+
+    const start = new Date(alignedEnd);
+    start.setDate(alignedEnd.getDate() - (53*7 - 1)); // 共 371 天覆盖
+
+    // 渲染格子（按列填充）
+    let lastMonth = -1;
+    for (let d = new Date(start); d <= alignedEnd; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        const count = map.get(key) || 0;
+        const level = getLevel(count);
+        const cell = document.createElement('div');
+        cell.className = 'contrib-day';
+        cell.style.backgroundColor = levelColor(level);
+        cell.title = `${key}: ${count} contributions`;
+        gridEl.appendChild(cell);
+
+        // 月份标签：在“该月的第一周”显示（第一天所在列）
+        if (d.getDate() === 1) {
+            const daysFromStart = Math.floor((d - start) / (24*3600*1000));
+            const columnIndex = Math.floor(daysFromStart / 7);
+            const label = document.createElement('span');
+            label.textContent = `${d.getMonth()+1}月`;
+            while (monthsEl.childElementCount < columnIndex) {
+                monthsEl.appendChild(document.createElement('span'));
+            }
+            monthsEl.appendChild(label);
+        }
+    }
+    // 填补剩余的月份栏位至 53 列
+    while (monthsEl.childElementCount < 53) monthsEl.appendChild(document.createElement('span'));
+
+    // 图例
+    const legend = [0,1,2,3,4];
+    legendEl.innerHTML = `少`
+        + legend.map(i => `<span class="legend-swatch" style="background:${levelColor(i)}"></span>`).join('')
+        + `多`;
+}
+
+
+
+// （旧的简单渲染已移除，使用上方 GitHub 风格渲染）
+function getLevel(count) {
+    if (count <= 0) return 0;
+    if (count < 2) return 1;
+    if (count < 5) return 2;
+    if (count < 10) return 3;
+    return 4;
+}
+
+function levelColor(level) {
+    switch(level){
+        case 1: return getCSSVar('--calendar-level-1');
+        case 2: return getCSSVar('--calendar-level-2');
+        case 3: return getCSSVar('--calendar-level-3');
+        case 4: return getCSSVar('--calendar-level-4');
+        default: return getCSSVar('--calendar-level-0');
+    }
+}
+
+function getCSSVar(name){
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// ---------- 视图切换 ----------
+(function initStatsViewToggle(){
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnStats = document.getElementById('view-stats');
+        const btnCalendar = document.getElementById('view-calendar');
+        const statsBlock = document.querySelector('.stats-lines');
+        const calendarBlock = document.getElementById('contrib-calendar');
+        if(!(btnStats && btnCalendar && statsBlock && calendarBlock)) return;
+
+        btnStats.addEventListener('click', () => {
+            btnStats.classList.add('active');
+            btnCalendar.classList.remove('active');
+            statsBlock.style.display = '';
+            calendarBlock.style.display = 'none';
+        });
+        btnCalendar.addEventListener('click', () => {
+            btnCalendar.classList.add('active');
+            btnStats.classList.remove('active');
+            statsBlock.style.display = 'none';
+            calendarBlock.style.display = '';
+        });
+    });
+})();
+
 
 // 获取语言对应的CSS类名
 function getLanguageClass(language) {
@@ -148,26 +411,26 @@ function getLanguageClass(language) {
         'Go': 'py',
         'Rust': 'py'
     };
-    
+
     return langMap[language] || 'py';
 }
 
 // 数字动画函数
 function animateNumber(element, start, end, duration) {
     const startTime = performance.now();
-    
+
     function update(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         const current = Math.floor(start + (end - start) * easeOutCubic(progress));
         element.textContent = current.toLocaleString();
-        
+
         if (progress < 1) {
             requestAnimationFrame(update);
         }
     }
-    
+
     requestAnimationFrame(update);
 }
 
@@ -179,27 +442,27 @@ function easeOutCubic(t) {
 // 增强的技能图标悬停效果
 function initSkillIcons() {
     const skillIcons = document.querySelectorAll('.skill-icon');
-    
+
     skillIcons.forEach((icon, index) => {
         // 添加延迟加载动画
         icon.style.animationDelay = `${index * 0.1}s`;
         icon.classList.add('skill-icon-animate-in');
-        
+
         icon.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-8px) scale(1.15) rotate(5deg)';
             this.style.boxShadow = '0 15px 35px rgba(255, 255, 255, 0.3)';
             this.style.background = 'rgba(255, 255, 255, 0.25)';
-            
+
             // // 添加粒子效果
             // createSkillParticles(this);
         });
-        
+
         icon.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(-3px) scale(1) rotate(0deg)';
             this.style.boxShadow = 'none';
             this.style.background = 'rgba(255, 255, 255, 0.1)';
         });
-        
+
         // 添加点击波纹效果
         icon.addEventListener('click', function(e) {
             const ripple = document.createElement('div');
@@ -218,10 +481,10 @@ function initSkillIcons() {
                 margin-left: -10px;
                 margin-top: -10px;
             `;
-            
+
             this.style.position = 'relative';
             this.appendChild(ripple);
-            
+
             setTimeout(() => {
                 ripple.remove();
             }, 600);
@@ -233,7 +496,7 @@ function initSkillIcons() {
 // function createSkillParticles(element) {
 //     const rect = element.getBoundingClientRect();
 //     const particleCount = 6;
-    
+
 //     for (let i = 0; i < particleCount; i++) {
 //         const particle = document.createElement('div');
 //         particle.style.cssText = `
@@ -247,15 +510,15 @@ function initSkillIcons() {
 //             left: ${rect.left + rect.width / 2}px;
 //             top: ${rect.top + rect.height / 2}px;
 //         `;
-        
+
 //         document.body.appendChild(particle);
-        
+
 //         // 随机方向和距离
 //         const angle = (i / particleCount) * Math.PI * 2;
 //         const distance = 30 + Math.random() * 20;
 //         const x = Math.cos(angle) * distance;
 //         const y = Math.sin(angle) * distance;
-        
+
 //         particle.animate([
 //             { transform: 'translate(0, 0) scale(1)', opacity: 1 },
 //             { transform: `translate(${x}px, ${y}px) scale(0)`, opacity: 0 }
@@ -269,12 +532,12 @@ function initSkillIcons() {
 // 修改后的卡片悬停效果
 function initCardEffects() {
     const cards = document.querySelectorAll('.site-card, .project-card');
-    
+
     cards.forEach((card, index) => {
         // 添加入场动画
         card.style.animationDelay = `${index * 0.15}s`;
         card.classList.add('card-animate-in');
-        
+
         // 添加3D倾斜效果
         card.addEventListener('mousemove', function(e) {
             const rect = this.getBoundingClientRect();
@@ -282,26 +545,26 @@ function initCardEffects() {
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            
+
             const rotateX = (y - centerY) / centerY * 8;
             const rotateY = (centerX - x) / centerX * 8;
-            
+
             this.style.transform = `translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
             this.style.boxShadow = '0 20px 40px rgba(255, 255, 255, 0.15)';
         });
-        
+
         card.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(-3px) rotateX(0deg) rotateY(0deg) scale(1)';
             this.style.boxShadow = 'none';
         });
-        
+
         // 添加点击动画
         card.addEventListener('click', function() {
             this.style.transform = 'translateY(-5px) scale(0.98)';
             setTimeout(() => {
                 this.style.transform = 'translateY(-8px) scale(1.03)';
             }, 150);
-            
+
             // 添加点击波纹效果
             createCardRipple(this, event);
         });
@@ -313,7 +576,7 @@ function createCardRipple(card, event) {
     const rect = card.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    
+
     const ripple = document.createElement('div');
     ripple.style.cssText = `
         position: absolute;
@@ -327,10 +590,10 @@ function createCardRipple(card, event) {
         animation: cardRipple 0.6s ease-out;
         pointer-events: none;
     `;
-    
+
     card.style.position = 'relative';
     card.appendChild(ripple);
-    
+
     setTimeout(() => {
         ripple.remove();
     }, 600);
@@ -346,7 +609,7 @@ function addAnimationStyles() {
                 opacity: 0;
             }
         }
-        
+
         @keyframes cardRipple {
             to {
                 width: 200px;
@@ -354,7 +617,7 @@ function addAnimationStyles() {
                 opacity: 0;
             }
         }
-        
+
         @keyframes skillIconIn {
             from {
                 opacity: 0;
@@ -365,7 +628,7 @@ function addAnimationStyles() {
                 transform: translateY(0) scale(1);
             }
         }
-        
+
         @keyframes cardIn {
             from {
                 opacity: 0;
@@ -376,7 +639,7 @@ function addAnimationStyles() {
                 transform: translateY(0);
             }
         }
-        
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -387,15 +650,15 @@ function addAnimationStyles() {
                 transform: translateY(0);
             }
         }
-        
+
         .skill-icon-animate-in {
             animation: skillIconIn 0.6s ease-out forwards;
         }
-        
+
         .card-animate-in {
             animation: cardIn 0.8s ease-out forwards;
         }
-        
+
         .github-stats {
             animation: fadeInUp 0.8s ease-out;
         }
@@ -410,7 +673,7 @@ function initScrollAnimations() {
             if (entry.isIntersecting) {
                 entry.target.style.opacity = '1';
                 entry.target.style.transform = 'translateY(0)';
-                
+
                 // 为技能图标添加波浪式动画
                 if (entry.target.classList.contains('skills-section')) {
                     const skillIcons = entry.target.querySelectorAll('.skill-icon');
@@ -444,7 +707,7 @@ function initTypewriterEffect() {
         const text = quoteElement.innerHTML; // 保留HTML标签
         quoteElement.innerHTML = '';
         let i = 0;
-        
+
         function typeWriter() {
             if (i < text.length) {
                 quoteElement.innerHTML = text.substring(0, i + 1);
@@ -452,7 +715,7 @@ function initTypewriterEffect() {
                 setTimeout(typeWriter, 50);
             }
         }
-        
+
         setTimeout(typeWriter, 1000);
     }
 }
@@ -460,25 +723,25 @@ function initTypewriterEffect() {
 // 社交链接增强效果
 function initSocialLinks() {
     const socialLinks = document.querySelectorAll('.social-links a');
-    
+
     socialLinks.forEach((link, index) => {
         // 添加延迟动画
         link.style.animationDelay = `${index * 0.1}s`;
         link.classList.add('social-link-animate');
-        
+
         link.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-5px) scale(1.2) rotate(10deg)';
             this.style.boxShadow = '0 10px 25px rgba(255, 255, 255, 0.2)';
         });
-        
+
         link.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0) scale(1) rotate(0deg)';
             this.style.boxShadow = 'none';
         });
-        
+
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // 创建点击波纹
             const ripple = document.createElement('div');
             ripple.style.cssText = `
@@ -495,12 +758,12 @@ function initSocialLinks() {
                 margin-left: -10px;
                 margin-top: -10px;
             `;
-            
+
             this.style.position = 'relative';
             this.appendChild(ripple);
-            
+
             setTimeout(() => ripple.remove(), 600);
-            
+
             console.log('Social link clicked:', this.querySelector('i').className);
         });
     });
@@ -515,7 +778,7 @@ function showIframe() {
         closeIframe();
         return;
     }
-    
+
     // 创建iframe容器
     iframeContainer = document.createElement('div');
     iframeContainer.style.cssText = `
@@ -532,7 +795,7 @@ function showIframe() {
         z-index: 10000;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     `;
-    
+
     // 创建iframe
     const iframe = document.createElement('iframe');
     iframe.height = "240";
@@ -544,7 +807,7 @@ function showIframe() {
         border-radius: 10px;
         margin-top: 30px;
     `;
-    
+
     // 创建关闭按钮
     const closeBtn = document.createElement('button');
     closeBtn.innerHTML = '×';
@@ -566,20 +829,20 @@ function showIframe() {
         backdrop-filter: blur(10px);
         transition: all 0.3s ease;
     `;
-    
+
     closeBtn.addEventListener('mouseenter', function() {
         this.style.background = 'rgba(255, 255, 255, 0.3)';
         this.style.transform = 'scale(1.1)';
     });
-    
+
     closeBtn.addEventListener('mouseleave', function() {
         this.style.background = 'rgba(255, 255, 255, 0.2)';
         this.style.transform = 'scale(1)';
     });
-    
+
     // 关闭功能
     closeBtn.addEventListener('click', closeIframe);
-    
+
     // ESC键关闭
     const escHandler = function(e) {
         if (e.key === 'Escape' && iframeContainer && document.body.contains(iframeContainer)) {
@@ -587,16 +850,16 @@ function showIframe() {
         }
     };
     document.addEventListener('keydown', escHandler);
-    
+
     // 组装并显示
     iframeContainer.appendChild(iframe);
     iframeContainer.appendChild(closeBtn);
     document.body.appendChild(iframeContainer);
-    
+
     // 添加进入动画
     iframeContainer.style.opacity = '0';
     iframeContainer.style.animation = 'fadeIn 0.3s ease-out forwards';
-    
+
     // 添加动画样式
     if (!document.getElementById('iframe-animations')) {
         const style = document.createElement('style');
@@ -606,7 +869,7 @@ function showIframe() {
                 from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
                 to { opacity: 1; transform: translateX(-50%) translateY(0); }
             }
-            
+
             @keyframes fadeOut {
                 from { opacity: 1; transform: translateX(-50%) translateY(0); }
                 to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
@@ -644,7 +907,7 @@ function fetchVisitorIP() {
                         // IPv6地址，截断显示
                         displayIP = data.ip.substring(0, 26) + '...';
                     }
-                    
+
                     // 显示IP地址、国家、地区、城市
                     const location = [data.country_name, data.region, data.city].filter(Boolean).join(' ');
                     ipElement.innerHTML = `${displayIP}<br>(${location} 的好友)`;
@@ -680,14 +943,14 @@ function fetchVisitorIP() {
 // 时间线增强动画
 function initTimelineAnimation() {
     const timelineItems = document.querySelectorAll('.timeline-item');
-    
+
     const timelineObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry, index) => {
             if (entry.isIntersecting) {
                 setTimeout(() => {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'translateX(0)';
-                    
+
                     // 为时间线点添加脉冲效果
                     const dot = entry.target.querySelector('.timeline-dot');
                     dot.style.animation = 'pulse 1s ease-in-out';
@@ -695,7 +958,7 @@ function initTimelineAnimation() {
             }
         });
     }, { threshold: 0.1 });
-    
+
     timelineItems.forEach(item => {
         item.style.opacity = '0';
         item.style.transform = 'translateX(-20px)';
@@ -713,7 +976,7 @@ function addPulseAnimation() {
             50% { transform: scale(1.5); box-shadow: 0 0 20px rgba(116, 185, 255, 0.6); }
             100% { transform: scale(1); }
         }
-        
+
         @keyframes socialLinkIn {
             from {
                 opacity: 0;
@@ -724,7 +987,7 @@ function addPulseAnimation() {
                 transform: translateY(0) rotate(0deg);
             }
         }
-        
+
         .social-link-animate {
             animation: socialLinkIn 0.6s ease-out forwards;
         }
@@ -735,7 +998,7 @@ function addPulseAnimation() {
 // 添加粒子背景效果
 function createParticles() {
     const particleCount = 30;
-    
+
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.style.cssText = `
@@ -751,27 +1014,27 @@ function createParticles() {
             animation: particleFloat ${3 + Math.random() * 4}s ease-in-out infinite;
             animation-delay: ${Math.random() * 2}s;
         `;
-        
+
         document.body.appendChild(particle);
     }
-    
+
     // 添加粒子动画样式
     const style = document.createElement('style');
     style.textContent = `
         @keyframes particleFloat {
-            0%, 100% { 
+            0%, 100% {
                 transform: translateY(0px) translateX(0px) rotate(0deg);
                 opacity: 0.3;
             }
-            25% { 
+            25% {
                 transform: translateY(-20px) translateX(10px) rotate(90deg);
                 opacity: 1;
             }
-            50% { 
+            50% {
                 transform: translateY(-10px) translateX(-10px) rotate(180deg);
                 opacity: 0.5;
             }
-            75% { 
+            75% {
                 transform: translateY(-30px) translateX(5px) rotate(270deg);
                 opacity: 0.8;
             }
@@ -787,10 +1050,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 获取真实GitHub数据
     fetchVisitorIP()
     fetchGitHubContributions(GITHUB_USERNAME);
-    
+
     // 检测是否为移动设备
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    
+
     if (!isMobile) {
         // 只在非移动设备上加载动画
         initSkillIcons();
@@ -807,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('load', () => {
     document.body.style.opacity = '0';
     document.body.style.transition = 'opacity 0.5s ease';
-    
+
     setTimeout(() => {
         document.body.style.opacity = '1';
     }, 100);
@@ -816,12 +1079,12 @@ window.addEventListener('load', () => {
 // 添加开发者工具检测和信息提示
 function detectDevTools() {
     let devtools = false;
-    
+
     // 检测开发者工具是否打开
     function checkDevTools() {
         const threshold = 160;
-        
-        if (window.outerHeight - window.innerHeight > threshold || 
+
+        if (window.outerHeight - window.innerHeight > threshold ||
             window.outerWidth - window.innerWidth > threshold) {
             if (!devtools) {
                 devtools = true;
@@ -834,18 +1097,18 @@ function detectDevTools() {
             }
         }
     }
-    
+
     // 显示开发者工具信息
     function showDevToolsMessage() {
         // 控制台输出样式化信息
         console.clear();
-        console.log('%c🎉 欢迎来到我的个人主页！', 'color: #74b9ff; font-size: 20px; font-weight: bold;');
-        console.log('%c👋 我的博客：https://blog.loadke.tech！', 'color: #00b894; font-size: 16px; font-weight: bold;');
-        console.log('%c📧 联系我：https://t.me/IonMagic', 'color: #fdcb6e; font-size: 14px;');
+        console.log('%c🎉 欢迎来到作者 IonRh的个人主页！', 'color: #74b9ff; font-size: 20px; font-weight: bold;');
+        console.log('%c👋 作者 IonRh的博客：https://blog.loadke.tech！', 'color: #00b894; font-size: 16px; font-weight: bold;');
+        console.log('%c📧 联系作者 IonRh：https://t.me/IonMagic', 'color: #fdcb6e; font-size: 14px;');
         console.log('%c🌟 GitHub：https://github.com/IonRh', 'color: #e17055; font-size: 14px;');
         console.log('%c🚀 喜欢探索新技术，欢迎交流合作！', 'color: #fd79a8; font-size: 14px;');
         console.log('%c💡 个人使用，请保留出处哦~', 'color: #00cec9; font-size: 14px;');
-        
+
         // 添加ASCII艺术
         console.log(`
 %c  ██╗ ██████╗ ███╗   ██╗██████╗ ██╗  ██╗
@@ -855,21 +1118,21 @@ function detectDevTools() {
   ██║╚██████╔╝██║ ╚████║██║  ██║██║  ██║
   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═╝
         `, 'color: #74b9ff; font-family: monospace;');
-        
+
         // 页面右下角显示提示框
         createDevToolsNotification();
-        
+
         // 检测右键和特定按键
         detectInspectActions();
     }
-    
+
     function hideDevToolsMessage() {
         const notification = document.getElementById('devtools-notification');
         if (notification) {
             notification.remove();
         }
     }
-    
+
     // 创建开发者工具通知
     function createDevToolsNotification() {
         // 移除已存在的通知
@@ -877,7 +1140,7 @@ function detectDevTools() {
         if (existingNotification) {
             existingNotification.remove();
         }
-        
+
         const notification = document.createElement('div');
         notification.id = 'devtools-notification';
         notification.innerHTML = `
@@ -893,7 +1156,7 @@ function detectDevTools() {
                 </div>
             </div>
         `;
-        
+
         notification.style.cssText = `
             position: fixed;
             bottom: 20px;
@@ -909,9 +1172,9 @@ function detectDevTools() {
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         `;
-        
+
         document.body.appendChild(notification);
-        
+
         // 5秒后自动消失
         setTimeout(() => {
             if (notification.parentNode) {
@@ -920,32 +1183,32 @@ function detectDevTools() {
             }
         }, 8000);
     }
-    
+
     // 检测右键点击和检查元素
     function detectInspectActions() {
         // 检测右键菜单
         document.addEventListener('contextmenu', function(e) {
             console.log('%c🖱️ 检测到右键点击 - 准备查看源码？', 'color: #ffeaa7; font-size: 14px;');
         });
-        
+
         // 检测F12按键
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F12') {
                 console.log('%c⌨️ F12 - 欢迎使用开发者工具！', 'color: #81ecec; font-size: 14px;');
             }
-            
+
             // 检测Ctrl+Shift+I
             if (e.ctrlKey && e.shiftKey && e.key === 'I') {
                 console.log('%c⌨️ Ctrl+Shift+I - 开发者快捷键！', 'color: #fab1a0; font-size: 14px;');
             }
-            
+
             // 检测Ctrl+U (查看源码)
             if (e.ctrlKey && e.key === 'u') {
                 console.log('%c📄 查看页面源码 - 探索代码结构吧！', 'color: #ff7675; font-size: 14px;');
             }
         });
     }
-    
+
     // 添加通知动画样式
     const style = document.createElement('style');
     style.textContent = `
@@ -959,7 +1222,7 @@ function detectDevTools() {
                 opacity: 1;
             }
         }
-        
+
         @keyframes slideOutDown {
             from {
                 transform: translateY(0);
@@ -970,11 +1233,11 @@ function detectDevTools() {
                 opacity: 0;
             }
         }
-        
+
         #devtools-notification .devtools-content {
             padding: 15px;
         }
-        
+
         #devtools-notification .devtools-header {
             display: flex;
             justify-content: space-between;
@@ -983,7 +1246,7 @@ function detectDevTools() {
             font-weight: bold;
             font-size: 14px;
         }
-        
+
         #devtools-notification .close-btn {
             background: none;
             border: none;
@@ -999,32 +1262,32 @@ function detectDevTools() {
             border-radius: 50%;
             transition: background 0.3s;
         }
-        
+
         #devtools-notification .close-btn:hover {
             background: rgba(255,255,255,0.2);
         }
-        
+
         #devtools-notification .devtools-body p {
             margin: 5px 0;
             font-size: 12px;
         }
-        
+
         #devtools-notification .devtools-body a {
             color: #74b9ff;
             text-decoration: none;
         }
-        
+
         #devtools-notification .devtools-body a:hover {
             text-decoration: underline;
         }
-        
+
         #devtools-notification .tech-stack {
             margin-top: 10px;
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
         }
-        
+
         #devtools-notification .tech-tag {
             background: rgba(116, 185, 255, 0.2);
             color: #74b9ff;
@@ -1035,7 +1298,7 @@ function detectDevTools() {
         }
     `;
     document.head.appendChild(style);
-    
+
     // 定期检测开发者工具状态
     setInterval(checkDevTools, 500);
 }

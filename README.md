@@ -35,17 +35,33 @@
 git clone https://github.com/zduu/homepage.git
 cd homepage
 
-# 启动本地服务器
+# 启动本地服务器（含可选 GraphQL 代理，端口 8002）
+# 可选：设置 GitHub Token 以启用“精确贡献日历”
+# Windows PowerShell
+#setx GITHUB_TOKEN "ghp_your_token"   # 永久；或使用当前会话：
+$env:GITHUB_TOKEN="ghp_your_token"
 python start.py
 
-# 或者使用 Python 内置服务器
+# 纯静态方式（不含代理）
 python -m http.server 8000
-
-# 或者使用 Node.js
+# 或 Node.js
 npx http-server -p 8000
 ```
 
-访问 `http://localhost:8000` 即可查看效果。
+- 使用 `python start.py` 时，访问 `http://localhost:8002`
+- 使用内置/Node 静态服务器时，访问 `http://localhost:8000`
+
+### 环境变量与配置示例
+- `.env.example`：环境变量示例（复制为 `.env`，不会被提交到 Git）
+- `.env`：本地私密环境变量（已在 `.gitignore` 中忽略）
+- `config.example.js`：配置示例（复制为 `config.js` 并修改）
+
+```bash
+# 初始化示例
+cp .env.example .env   # Windows 可用：copy .env.example .env
+cp config.example.js config.js   # Windows：copy config.example.js config.js
+```
+
 
 ## ⚙️ 配置说明
 
@@ -74,6 +90,21 @@ personal: {
 
 ```javascript
 github: {
+
+> 贡献日历数据来源配置（可选）：
+>
+> ```js
+> github: {
+>   username: "你的GitHub用户名",
+>   profileUrl: "https://github.com/你的用户名",
+>   // 'auto'：优先使用代理获取精确数据，失败回退 events
+>   // 'proxy'：仅使用代理（需要后端支持）
+>   // 'events'：仅使用 events 估算（无需后端，默认 Cloudflare 静态可用）
+>   calendarSource: 'auto',
+>   calendarProxyEndpoint: '/api/github/contributions'
+> }
+> ```
+
     username: "你的GitHub用户名",         // ⚠️ 重要：影响统计数据获取
     profileUrl: "https://github.com/你的用户名"
 }
@@ -161,22 +192,94 @@ texts: {
 ### Cloudflare Pages 部署
 
 1. **准备工作**
-   ```bash
-   # 确保配置正确
-   python start.py  # 本地测试
-
-   # 检查所有链接和图标
-   # 验证GitHub用户名配置
-   ```
+   - 修改 `config.js` 中的 `github.username`
+   - 如需“精确贡献日历”，你有两种选择：
+     - 纯静态部署（默认，简单）：把 `github.calendarSource` 设为 `'events'` 或 `'auto'`（自动回退），无需后端
+     - 使用 Pages Functions（可选）：保持 `calendarSource: 'auto'` 或 `'proxy'`，并提供 `/api/github/contributions` 函数（示例可向我索取）
 
 2. **部署步骤**
    - Fork 本仓库到你的 GitHub
    - 登录 [Cloudflare Pages](https://pages.cloudflare.com/)
    - 连接 GitHub 仓库
    - 构建设置：
-     - 构建命令：留空
+     - 构建命令：留空（本项目为纯静态）
      - 构建输出目录：`/`
    - 部署完成后绑定自定义域名
+
+### 如何获取 GITHUB_TOKEN（只读、最低权限）
+1. 打开 https://github.com/settings/tokens
+2. 推荐使用 Fine-grained token（或经典 Token 也可）
+3. 权限选择：只读公共仓库即可（无需私有权限）
+4. 复制 Token，粘贴到 `.env` 的 `GITHUB_TOKEN=` 后
+5. 切勿将 `.env` 提交到 Git（已被忽略）
+
+### 在 Cloudflare 中使用
+- 纯静态 Cloudflare Pages：无需 Token，也能展示“估算版”贡献日历（events）。
+  - 建议在 `config.js`：`calendarSource: 'events'` 或保留 `'auto'`（自动回退）
+- Cloudflare Pages Functions（可选，启用“精确日历”）：
+  - 新建函数 `/api/github/contributions`，读取环境变量 `GITHUB_TOKEN`，实现与 README 前文一致的 GraphQL 代理
+  - 在 Pages 的项目设置中新增环境变量 `GITHUB_TOKEN`
+  - 前端配置保持：
+    ```js
+    github: {
+      calendarSource: 'auto',
+      calendarProxyEndpoint: '/api/github/contributions'
+    }
+    ```
+  - 部署后，前端将优先调用该端点获取精确数据，失败时回退到 events
+
+## 启用 Cloudflare Pages Functions（精确贡献日历）
+
+本仓库已内置函数：`functions/api/github/contributions.js`
+
+1) 在 Cloudflare Pages 项目 → Settings → Environment variables，新建：
+   - `GITHUB_TOKEN` = 你的 Token（只读、最低权限；若需私有贡献计入，请使用你本人账号 Token，并在 GitHub 个人设置中勾选“Include private contributions”）
+
+2) 部署后，前端无需改动或仅保持：
+```js
+// config.js 中（默认已是 auto）
+github: {
+  calendarSource: 'auto',
+  calendarProxyEndpoint: '/api/github/contributions'
+}
+```
+
+3) 验证
+- 打开你的站点，切换到“日历”视图，应显示完整 1 年绿色格子；若函数异常，前端会自动回退到 events 估算
+
+4) 常见问题
+- 403/401：检查 GITHUB_TOKEN 是否正确、未过期
+- 数据缺天：GraphQL 正常，但你账号近年无活动；或私有贡献未在 GitHub 个人设置中勾选显示
+- 跨域：本函数默认 `Access-Control-Allow-Origin: *`，同源 Pages 一般无跨域问题
+
+
+
+3. **可选：启用精确贡献日历（Pages Functions）**
+   - 在项目中添加一个函数 `functions/api/github/contributions.js`（或 .ts），读取环境变量 `GITHUB_TOKEN`，实现与 README 顶部 GraphQL 查询一致的代理逻辑
+   - 在 Cloudflare 项目的 Pages 设置里添加环境变量 `GITHUB_TOKEN`
+   - 部署后，确保 `config.js` 中：
+     ```js
+     github: {
+       calendarSource: 'auto',
+       calendarProxyEndpoint: '/api/github/contributions'
+     }
+     ```
+
+### 本地精确日历（可选）
+- 如果你只想本地预览“精确贡献日历”，可使用本仓库的 `start.py`：
+  ```powershell
+  # Windows PowerShell（当前会话）
+  $env:GITHUB_TOKEN="ghp_your_token"
+  python start.py  # 打开 http://localhost:8002
+  ```
+  ```bash
+  # macOS/Linux
+  export GITHUB_TOKEN="ghp_your_token"
+  python3 start.py
+  ```
+- Cloudflare Pages 部署仍为纯静态，不依赖该脚本
+
+   - 前端会优先通过该端点获取精确数据，失败时自动回退到 events
 
 ### GitHub Pages 部署
 

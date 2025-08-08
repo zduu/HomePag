@@ -1,6 +1,7 @@
 /**
  * 个人主页配置文件
  * 在这里修改你的个人信息，然后在 index.html 中引用
+ * 头像修改在static文件夹下，用相同命名替换1.png和f2.png即可
  */
 
 const CONFIG = {
@@ -18,7 +19,14 @@ const CONFIG = {
     // ==================== GitHub 配置 ====================
     github: {
         username: "zduu",                 // 你的 GitHub 用户名（重要：影响统计数据获取）
-        profileUrl: "https://github.com/zduu"  // GitHub 个人主页链接
+        profileUrl: "https://github.com/zduu",  // GitHub 个人主页链接
+        // 贡献日历数据来源：
+        // - 'auto'：优先使用代理（/api/github/contributions），失败回退 events
+        // - 'proxy'：仅使用代理，失败不回退
+        // - 'events'：仅使用events估算（无需后端）
+        calendarSource: 'auto',
+        // 代理端点（同源部署时保持默认即可；Cloudflare Pages Functions 建议 /api/...）
+        calendarProxyEndpoint: '/api/github/contributions'
     },
 
     // ==================== 社交链接 ====================
