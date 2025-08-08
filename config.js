@@ -67,7 +67,7 @@ const CONFIG = {
         },
         {
             name: "icon工具",
-            description: "一个小小的icron搜索工具",
+            description: "一个icron搜索工具",
             url: "https://icontool.pages.dev",
             icon: "https://api.iconify.design/mdi:svg.svg"
         },
