@@ -395,6 +395,59 @@ body::before {
     padding: 8px;
     border-radius: 8px;
     border: 1px dashed var(--border-primary);
+    position: relative;
+}
+
+/* 日历滚动容器 */
+.contrib-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-primary) transparent;
+}
+
+/* 自定义滚动条样式 */
+.contrib-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.contrib-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+}
+
+.contrib-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--border-primary);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.contrib-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* 移动端滚动提示 */
+.contrib-scroll-hint {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    border: 1px solid var(--border-primary);
+    pointer-events: none;
+    opacity: 0.8;
+    animation: scrollHintPulse 2s infinite;
+}
+
+@keyframes scrollHintPulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
 }
 /* 月份标签行 */
 .contrib-months {
@@ -407,10 +460,24 @@ body::before {
     line-height: 12px;
     height: 12px;
 }
-.contrib-months span { text-align: left; }
+.contrib-months span {
+    text-align: left;
+}
+.contrib-months .month-label {
+    font-weight: 500;
+}
+.contrib-months .month-label-mobile {
+    font-weight: 600;
+    text-align: center;
+}
 
 /* 网格与星期标签 */
-.contrib-grid-wrap { display: flex; gap: 6px; margin-top: 4px; }
+.contrib-grid-wrap {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    min-width: fit-content;
+}
 .contrib-weekdays {
     display: grid;
     grid-template-rows: repeat(7, 12px);
@@ -420,7 +487,13 @@ body::before {
     font-size: 10px;
     line-height: 12px;
 }
-.contrib-weekdays span { display: block; }
+.contrib-weekdays span {
+    display: block;
+    text-align: center;
+}
+.contrib-weekdays .weekday-label {
+    font-weight: 500;
+}
 
 /* 53x7 网格，按列填充（周为列，周日→周六为行） */
 .contrib-grid {
@@ -824,6 +897,73 @@ body::before {
         padding: 2px 5px;
         margin-right: 4px;
     }
+
+    /* 移动端日历适配 */
+    .contrib-calendar {
+        padding: 6px;
+    }
+
+    .contrib-scroll-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        /* 确保在移动端显示滚动条 */
+        scrollbar-width: auto;
+    }
+
+    .contrib-scroll-container::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .contrib-scroll-hint {
+        display: block;
+        font-size: 9px;
+        padding: 3px 6px;
+    }
+
+    .contrib-months {
+        grid-template-columns: repeat(53, 10px);
+        gap: 2px;
+        margin-left: 20px;
+        font-size: 9px;
+        line-height: 10px;
+        height: 10px;
+    }
+
+    .contrib-grid-wrap {
+        gap: 4px;
+        min-width: fit-content;
+    }
+
+    .contrib-weekdays {
+        grid-template-rows: repeat(7, 10px);
+        gap: 2px;
+        width: 20px;
+        font-size: 9px;
+        line-height: 10px;
+    }
+
+    .contrib-grid {
+        grid-template-columns: repeat(53, 10px);
+        grid-template-rows: repeat(7, 10px);
+        gap: 2px;
+    }
+
+    .contrib-day {
+        width: 10px;
+        height: 10px;
+    }
+
+    .contrib-legend {
+        gap: 4px;
+        font-size: 9px;
+        margin-top: 4px;
+        justify-content: center;
+    }
+
+    .legend-swatch {
+        width: 10px;
+        height: 10px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -842,6 +982,66 @@ body::before {
 
     .highlight-number {
         font-size: 16px;
+    }
+
+    /* 小屏幕日历进一步优化 */
+    .contrib-calendar {
+        padding: 4px;
+    }
+
+    .contrib-scroll-container::-webkit-scrollbar {
+        height: 3px;
+    }
+
+    .contrib-scroll-hint {
+        font-size: 8px;
+        padding: 2px 5px;
+        right: 4px;
+    }
+
+    .contrib-months {
+        grid-template-columns: repeat(53, 8px);
+        gap: 1px;
+        margin-left: 16px;
+        font-size: 8px;
+        line-height: 8px;
+        height: 8px;
+    }
+
+    .contrib-grid-wrap {
+        gap: 3px;
+    }
+
+    .contrib-weekdays {
+        grid-template-rows: repeat(7, 8px);
+        gap: 1px;
+        width: 16px;
+        font-size: 8px;
+        line-height: 8px;
+    }
+
+    .contrib-grid {
+        grid-template-columns: repeat(53, 8px);
+        grid-template-rows: repeat(7, 8px);
+        gap: 1px;
+    }
+
+    .contrib-day {
+        width: 8px;
+        height: 8px;
+        border-radius: 1px;
+    }
+
+    .contrib-legend {
+        gap: 3px;
+        font-size: 8px;
+        margin-top: 3px;
+    }
+
+    .legend-swatch {
+        width: 8px;
+        height: 8px;
+        border-radius: 1px;
     }
 
 /* 轻量 Toast 提示 */
@@ -888,18 +1088,53 @@ body::before {
 
 @media (max-width: 360px) {
     /* 针对更小屏幕的优化 */
-    .contribution-graph {
-        min-width: 320px;
+    .contrib-calendar {
+        padding: 3px;
     }
 
-    .contribution-day {
-        width: 5px;
-        height: 5px;
+    .contrib-months {
+        grid-template-columns: repeat(53, 6px);
+        gap: 1px;
+        margin-left: 14px;
+        font-size: 7px;
+        line-height: 6px;
+        height: 6px;
     }
 
-    .legend-color {
+    .contrib-grid-wrap {
+        gap: 2px;
+    }
+
+    .contrib-weekdays {
+        grid-template-rows: repeat(7, 6px);
+        gap: 1px;
+        width: 14px;
+        font-size: 7px;
+        line-height: 6px;
+    }
+
+    .contrib-grid {
+        grid-template-columns: repeat(53, 6px);
+        grid-template-rows: repeat(7, 6px);
+        gap: 1px;
+    }
+
+    .contrib-day {
         width: 6px;
         height: 6px;
+        border-radius: 1px;
+    }
+
+    .contrib-legend {
+        gap: 2px;
+        font-size: 7px;
+        margin-top: 2px;
+    }
+
+    .legend-swatch {
+        width: 6px;
+        height: 6px;
+        border-radius: 1px;
     }
 }
 

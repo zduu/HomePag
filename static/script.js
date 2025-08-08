@@ -330,7 +330,17 @@ function renderContribCalendar(contrib) {
             const daysFromStart = Math.floor((d - start) / (24*3600*1000));
             const columnIndex = Math.floor(daysFromStart / 7);
             const label = document.createElement('span');
-            label.textContent = `${d.getMonth()+1}月`;
+
+            // 检测是否为移动端，显示更简洁的月份标签
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                label.textContent = `${d.getMonth()+1}`;
+                label.className = 'month-label-mobile';
+            } else {
+                label.textContent = `${d.getMonth()+1}月`;
+                label.className = 'month-label';
+            }
+
             while (monthsEl.childElementCount < columnIndex) {
                 monthsEl.appendChild(document.createElement('span'));
             }
@@ -345,7 +355,70 @@ function renderContribCalendar(contrib) {
     legendEl.innerHTML = `少`
         + legend.map(i => `<span class="legend-swatch" style="background:${levelColor(i)}"></span>`).join('')
         + `多`;
+
+    // 添加移动端滚动提示
+    addScrollHintForMobile();
 }
+
+function addScrollHintForMobile() {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) return;
+
+    const container = document.getElementById('contrib-calendar');
+    const scrollContainer = container.querySelector('.contrib-scroll-container');
+    if (!container || !scrollContainer) return;
+
+    // 检查是否需要滚动
+    const needsScroll = scrollContainer.scrollWidth > scrollContainer.clientWidth;
+    if (!needsScroll) return;
+
+    // 创建滚动提示
+    const hint = document.createElement('div');
+    hint.className = 'contrib-scroll-hint';
+    hint.textContent = '→';
+    hint.style.display = 'block';
+    container.appendChild(hint);
+
+    // 监听滚动事件，滚动后隐藏提示
+    let scrollTimeout;
+    scrollContainer.addEventListener('scroll', () => {
+        hint.style.opacity = '0.3';
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            hint.style.display = 'none';
+        }, 1000);
+    });
+
+    // 3秒后自动隐藏提示
+    setTimeout(() => {
+        if (hint.style.display !== 'none') {
+            hint.style.opacity = '0.3';
+            setTimeout(() => {
+                hint.style.display = 'none';
+            }, 500);
+        }
+    }, 3000);
+}
+
+// 监听窗口大小变化，重新检查移动端适配
+function handleWindowResize() {
+    const calendarContainer = document.getElementById('contrib-calendar');
+    if (!calendarContainer) return;
+
+    // 移除现有的滚动提示
+    const existingHint = calendarContainer.querySelector('.contrib-scroll-hint');
+    if (existingHint) {
+        existingHint.remove();
+    }
+
+    // 重新添加滚动提示（如果需要）
+    setTimeout(() => {
+        addScrollHintForMobile();
+    }, 100);
+}
+
+// 添加窗口大小变化监听器
+window.addEventListener('resize', handleWindowResize);
 
 
 
