@@ -396,10 +396,12 @@ body::before {
     border-radius: 8px;
     border: 1px dashed var(--border-primary);
     position: relative;
+    max-width: 100%;
 }
 
 /* 日历滚动容器 */
 .contrib-scroll-container {
+    width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
@@ -476,7 +478,6 @@ body::before {
     display: flex;
     gap: 6px;
     margin-top: 4px;
-    min-width: fit-content;
 }
 .contrib-weekdays {
     display: grid;
@@ -550,6 +551,7 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 25px;
+    min-width: 0; /* 防止被内部元素撑开 */
 }
 
 /* GitHub 贡献统计 - 带背景框的简洁样式 */
@@ -931,7 +933,7 @@ body::before {
 
     .contrib-grid-wrap {
         gap: 4px;
-        min-width: fit-content;
+        min-width: fit-content; /* 仅移动端以内容为最小宽度，避免桌面端撑开 */
     }
 
     .contrib-weekdays {
